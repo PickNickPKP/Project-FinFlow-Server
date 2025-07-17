@@ -2,7 +2,7 @@ import express from 'express'
 import * as authController from "../controllers/auth.controller.js";
 import { loginSchema, registerSchema, validate } from '../validations/validator.js'
 import authenticate from '../middlewares/authenticate.middleware.js'
-import isAdmin from '../middlewares/is-admin.middleware.js' // ✅ เพิ่ม
+import isAdmin from '../middlewares/is-admin.middleware.js';
 
 const authRoute = express.Router()
 

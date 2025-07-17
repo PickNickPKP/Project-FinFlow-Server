@@ -1,58 +1,13 @@
 import prisma from '../config/prisma.config.js'
 import createError from '../utils/create-error.util.js'
 import bcrypt from 'bcryptjs'
-// import checkIdentity from '../utils/check-identity.util.js'
+import jwt from 'jsonwebtoken'
 
-// export async function register(req, res, next) {
-//   try {
-//     const { identity, username, password, confirmPassword, capital } = req.body;
-
-//     if (!identity || !username || !password || !confirmPassword) {
-//       throw createError(400, 'Please provide all required fields');
-//     }
-
-//     if (password !== confirmPassword) {
-//       throw createError(400, 'Passwords do not match');
-//     }
-
-//     const identityKey = checkIdentity(identity); // returns 'email' or 'phone'
-
-//     const existingUser = await prisma.user.findUnique({
-//       where: { [identityKey]: identity }
-//     });
-
-//     console.log('existingUser:', existingUser);
-
-//     if (existingUser) {
-//       throw createError(409, This ${identityKey} is already registered);
-//     }
-
-//     const newUser = await prisma.user.create({
-//       data: {
-//         [identityKey]: identity,
-//         username,
-//         password: await bcrypt.hash(password, 10),
-//         capital: parseFloat(capital || 0)
-//       }
-//     });
-
-//     const { password: _, ...userWithoutPassword } = newUser;
-
-//     res.status(201).json({
-//       message: 'User registered successfully',
-//       user: userWithoutPassword
-//     });
-
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
+// ✅ REGISTER (YUP version)
 export async function registerYup(req, res, next) {
   try {
     const { email, phone, username, password, capital } = req.body;
 
-    // Check if email is already registered
     if (email) {
       const existingEmail = await prisma.user.findUnique({ where: { email } });
       if (existingEmail) {
@@ -60,7 +15,6 @@ export async function registerYup(req, res, next) {
       }
     }
 
-    // Check if phone is already registered
     if (phone) {
       const existingPhone = await prisma.user.findUnique({ where: { phone } });
       if (existingPhone) {
@@ -68,19 +22,18 @@ export async function registerYup(req, res, next) {
       }
     }
 
-    // Create new user
     const newUser = await prisma.user.create({
       data: {
         email: email || null,
         phone: phone || null,
         username,
         password: await bcrypt.hash(password, 10),
-        capital: parseFloat(capital || 0)
+        capital: parseFloat(capital || 0),
+        role: 'user' // ✅ ตั้งค่า default role เป็น user
       }
     });
 
-    // Remove password before sending response
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { password: _, createdAt, updatedAt, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
       message: 'Register successful',
@@ -92,11 +45,51 @@ export async function registerYup(req, res, next) {
   }
 }
 
+// ✅ LOGIN
+export const login = async (req, res, next) => {
+  try {
+    const { email, phone, password } = req.body;
+    const identityKey = email ? 'email' : 'phone';
+    const identityValue = email || phone;
 
-export const login = (req,res,next)=>{
-  console.log(req.body)
-   res.json({
-    msg: 'Login controller',
-    body: req.body
-  })
+    const foundUser = await prisma.user.findUnique({
+      where: { [identityKey]: identityValue }
+    });
+
+    if (!foundUser) {
+      throw createError(401, 'Invalid login');
+    }
+
+    const pwOk = await bcrypt.compare(password, foundUser.password);
+    if (!pwOk) {
+      throw createError(401, 'Invalid login');
+    }
+
+    // ✅ ใส่ role ลงใน token
+    const payload = {
+      id: foundUser.id,
+      role: foundUser.role
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '15d'
+    });
+
+    const { password: _, createdAt, updatedAt, ...userData } = foundUser;
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: userData
+    });
+
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ✅ GET CURRENT USER
+export const getMe = async (req, res, next) => {
+  res.json({ user: req.user });
 }
