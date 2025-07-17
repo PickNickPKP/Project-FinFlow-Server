@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String?       @unique
+  phone        String?       @unique
+  username     String
+  password     String
+  capital      Float
+  incomes      Income[]
+  expenses     Expense[]
+  savingGoals  SavingGoal[]
+}
+
+model Income {
+  id              Int             @id @default(autoincrement())
+  type            IncomeType
+  category        String
+  amount          Float
+  createdAt       DateTime        @default(now())
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          Int
+  categoryIncome  CategoryIncome  @relation(fields: [categoryIncomeId], references: [id], onDelete: Cascade)
+  categoryIncomeId Int
+}
+
+model Expense {
+  id               Int              @id @default(autoincrement())
+  type             ExpenseType
+  category         String
+  amount           Float
+  createdAt        DateTime         @default(now())
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int
+  categoryExpense  CategoryExpense  @relation(fields: [categoryExpenseId], references: [id], onDelete: Cascade)
+  categoryExpenseId Int
+}
+
+model CategoryIncome {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  incomes Income[]
+}
+
+model CategoryExpense {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  expenses Expense[]
+}
+
+model SavingGoal {
+  id                  Int     @id @default(autoincrement())
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              Int
+  yearAmount          Int
+  savingGoal          Float
+  interestRate        Float
+  saveMoneyPerMonth   Float
+  nameSaving          String
+}
+
+enum IncomeType {
+  PLUS
+  MINUS
+}
+
+enum ExpenseType {
+  PLUS
+  MINUS
+}
