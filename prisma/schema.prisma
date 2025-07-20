@@ -15,38 +15,39 @@ datasource db {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String?       @unique
-  phone        String?       @unique
-  username     String
-  password     String
-  capital      Float
-  incomes      Income[]
-  expenses     Expense[]
-  savingGoals  SavingGoal[]
+  id          Int          @id @default(autoincrement())
+  email       String?      @unique
+  phone       String?      @unique
+  username    String
+  password    String
+  capital     Float
+  totalAmount Float
+  incomes     Income[]
+  expenses    Expense[]
+  savingGoals SavingGoal[]
 }
 
 model Income {
-  id              Int             @id @default(autoincrement())
-  type            IncomeType
-  category        String
-  amount          Float
-  createdAt       DateTime        @default(now())
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          Int
-  categoryIncome  CategoryIncome  @relation(fields: [categoryIncomeId], references: [id], onDelete: Cascade)
+  id               Int            @id @default(autoincrement())
+  type             IncomeType
+  category         String
+  amount           Float
+  createdAt        DateTime       @default(now())
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int
+  categoryIncome   CategoryIncome @relation(fields: [categoryIncomeId], references: [id], onDelete: Cascade)
   categoryIncomeId Int
 }
 
 model Expense {
-  id               Int              @id @default(autoincrement())
-  type             ExpenseType
-  category         String
-  amount           Float
-  createdAt        DateTime         @default(now())
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId           Int
-  categoryExpense  CategoryExpense  @relation(fields: [categoryExpenseId], references: [id], onDelete: Cascade)
+  id                Int             @id @default(autoincrement())
+  type              ExpenseType
+  category          String
+  amount            Float
+  createdAt         DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int
+  categoryExpense   CategoryExpense @relation(fields: [categoryExpenseId], references: [id], onDelete: Cascade)
   categoryExpenseId Int
 }
 
@@ -63,22 +64,22 @@ model CategoryExpense {
 }
 
 model SavingGoal {
-  id                  Int     @id @default(autoincrement())
-  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId              Int
-  yearAmount          Int
-  savingGoal          Float
-  interestRate        Float
-  saveMoneyPerMonth   Float
-  nameSaving          String
+  id                Int    @id @default(autoincrement())
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int
+  yearAmount        Int
+  savingGoal        Float
+  interestRate      Float
+  saveMoneyPerMonth Float
+  nameSaving        String
 }
 
 enum IncomeType {
-  PLUS
-  MINUS
+  CASH
+  CREDIT
 }
 
 enum ExpenseType {
-  PLUS
-  MINUS
+  CASH
+  CREDIT
 }
